@@ -1,17 +1,17 @@
-
 import { useState, useEffect } from "react";
 
 export const useNetworkMode = () => {
-  const [networkMode, setNetworkMode] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const storedValue = localStorage.getItem("networkMode");
-      return storedValue ? storedValue : "mainnet"; 
-    }
-    return "mainnet";
-  });
+  const [networkMode, setNetworkMode] = useState<string | null>(null);
 
   useEffect(() => {
-    localStorage.setItem("networkMode", networkMode);
+    const storedValue = localStorage.getItem("networkMode") || "mainnet";
+    setNetworkMode(storedValue);
+  }, []);
+
+  useEffect(() => {
+    if (networkMode !== null) {
+      localStorage.setItem("networkMode", networkMode);
+    }
   }, [networkMode]);
 
   return [networkMode, setNetworkMode] as const;

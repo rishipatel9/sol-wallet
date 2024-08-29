@@ -21,6 +21,7 @@ export function Landingpage() {
   useEffect(() => {
     if (inputValue.trim() === "") {
       setGeneratePhrase(true);
+      localStorage.setItem("theme","dark");
     } else {
       setGeneratePhrase(false);
     }
