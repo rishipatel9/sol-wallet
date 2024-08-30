@@ -11,7 +11,7 @@ import { toast } from "sonner";
 type NetworkMode = "devnet" | "mainnet";
 
 export default function Page() {
-    const [networkMode, setNetworkMode] = useState<NetworkMode>("devnet");
+    const [networkMode, setNetworkMode] = useState<string>("devnet");
     const [amount, setAmount] = useState<string>("");
     const [maxBalance, setMaxBalance] = useState<number>(0);
     const [recipient, setRecipient] = useState<string>("");
@@ -41,7 +41,7 @@ export default function Page() {
     }, [networkMode]);
 
     // Handle network mode change
-    const handleNetworkModeChange = useCallback((newNetworkMode: NetworkMode) => {
+    const handleNetworkModeChange = useCallback((newNetworkMode: string) => {
         setNetworkMode(newNetworkMode);
     }, []);
 
