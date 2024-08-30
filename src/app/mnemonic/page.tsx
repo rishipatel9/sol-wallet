@@ -10,12 +10,11 @@ export default function MnemonicDisplay() {
     const [copied, setCopied] = useState(false);
     const [networkMode, setNetworkMode] = useState<string | null>(null);
 
-    // Handle network mode change
+
     const handleNetworkModeChange = useCallback((newNetworkMode: string) => {
         setNetworkMode(newNetworkMode);
     }, []);
 
-    // Fetch mnemonic from localStorage on component mount
     useEffect(() => {
         const storedMnemonic = localStorage.getItem("mnemonic");
         if (storedMnemonic) {
@@ -23,13 +22,12 @@ export default function MnemonicDisplay() {
         }
     }, []);
 
-    // Handle copy to clipboard
     const handleCopy = useCallback(() => {
         if (mnemonic) {
             navigator.clipboard.writeText(mnemonic)
                 .then(() => {
                     setCopied(true);
-                    setTimeout(() => setCopied(false), 2000); // Reset after 2 seconds
+                    setTimeout(() => setCopied(false), 2000); 
                 })
                 .catch((err) => console.error('Failed to copy: ', err));
         }

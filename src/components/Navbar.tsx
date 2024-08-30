@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Switch } from "./ui/switch";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuTrigger } from "./ui/dropdown-menu";
-import { EyeOff, GithubIcon, Plus, Settings, Trash2, TwitterIcon, User } from "lucide-react";
+import { EyeOff, GithubIcon, HomeIcon, Plus, Settings, Trash2, TwitterIcon, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
     AlertDialog,
@@ -69,9 +69,9 @@ export default function Navbar({ networkMode, onNetworkModeChange }: NavbarProps
                                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
                                 <DropdownMenuSeparator className="bg-[#27272B]" />
                                 <DropdownMenuGroup>
-                                    <DropdownMenuItem>
-                                        <User className="mr-2 h-4 w-4" />
-                                        <span>Profile</span>
+                                    <DropdownMenuItem onClick={()=>router.push('/wallet')}>
+                                        <HomeIcon className="mr-2 h-4 w-4" />
+                                        <span>Home</span>
                                         <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
                                     </DropdownMenuItem>
                                     <DropdownMenuItem>
