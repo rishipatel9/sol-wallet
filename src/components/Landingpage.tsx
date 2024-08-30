@@ -1,6 +1,6 @@
 "use client";
 
-import { GenerateKey } from "@/utils/GenerateKey";
+
 import { useState, useEffect } from "react";
 import BlurFade from "./magicui/blur-fade";
 import { Button } from "./ui/button";
@@ -8,6 +8,7 @@ import { Input } from "./ui/input";
 import { validateMnemonic } from "bip39";
 import { toast, Toaster } from "sonner";
 import { useRouter } from "next/navigation";
+import { GenerateKey } from "@/utils/GenerateKey";
 
 const BLUR_FADE_DELAY = 0.7;
 

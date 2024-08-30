@@ -2,6 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  /* Hide the arrows on Chrome, Safari, Edge, and Opera */
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    @apply appearance-none;
+    margin: 0;
+  }
+
+  /* Hide the arrows on Firefox */
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
+}
 @layer base {
   :root {
     --background: 0 0% 100%;
