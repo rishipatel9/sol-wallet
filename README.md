@@ -18,7 +18,7 @@ A simple Solana wallet implementation with receive and send functionality.
 
 1. Clone the repository:
    ```
-   git clone https://github.com/yourusername/solana-wallet.git
+   git clone https://github.com/rishipatel9/solana-wallet.git
    cd solana-wallet
    ```
 
