@@ -27,6 +27,7 @@ A simple Solana wallet implementation with receive and send functionality.
    npm install
    ```
 3. Start Locally
+
     ```
     npm run dev
     ```
