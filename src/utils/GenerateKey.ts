@@ -5,15 +5,15 @@ import { toast } from "sonner";
 import nacl from "tweetnacl";
 import bs58 from "bs58";
 
-interface wallet{
-    PrivateKey:string,
-    PublicKey:string,
-    mnemonic:string,
-    path:string
+interface wallet {
+  PrivateKey: string;
+  PublicKey: string;
+  mnemonic: string;
+  path: string;
 }
 
-export const GenerateKey=async()=>{
-    try{
+export const GenerateKey = async () => {
+  try {
     const mn = await generateMnemonic();
     console.log(mn);
     const seedBuffer = mnemonicToSeedSync(mn);
@@ -25,10 +25,11 @@ export const GenerateKey=async()=>{
     const keypair = Keypair.fromSecretKey(secretKey);
     privateKeyEncoded = bs58.encode(secretKey);
     publicKeyEncoded = keypair.publicKey.toBase58();
-    localStorage.setItem("mnemonic",mn);
-    localStorage.setItem("PublicKey",publicKeyEncoded);
-    localStorage.setItem("PrivateKey",privateKeyEncoded);
+    localStorage.setItem("mnemonic", mn);
+    localStorage.setItem("PublicKey", publicKeyEncoded);
+    localStorage.setItem("PrivateKey", privateKeyEncoded);
+    
   } catch (e) {
     toast.error("Failed to generate wallet. Please try again.");
   }
-}
+};
