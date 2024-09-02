@@ -5,10 +5,14 @@ import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { GetBalance } from "@/utils/GetBalance";
-import { PublicKey, Connection, Transaction, SystemProgram, Keypair } from "@solana/web3.js";
+import { PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { toast } from "sonner";
-
-type NetworkMode = "devnet" | "mainnet";
+import {
+    ConnectionProvider,
+    useConnection,
+    useWallet,
+    WalletProvider
+} from '@solana/wallet-adapter-react';
 
 export default function Page() {
     const [networkMode, setNetworkMode] = useState<string>("devnet");
@@ -17,17 +21,9 @@ export default function Page() {
     const [recipient, setRecipient] = useState<string>("");
     const [isRecipientValid, setIsRecipientValid] = useState<boolean>(true);
     const [isSending, setIsSending] = useState<boolean>(false);
-    const [endpoint, setEndpoint] = useState<string>("");
 
-
-    useEffect(() => {
-        const fetchEndpoint = async () => {
-            const response = await fetch(`/api/getSolanaEndpoint?networkMode=${networkMode}`);
-            const data: { endpoint: string } = await response.json();
-            setEndpoint(data.endpoint);
-        };
-        fetchEndpoint();
-    }, [networkMode]);
+    const wallet = useWallet();
+    const { connection } = useConnection();
 
     useEffect(() => {
         const fetchBalance = async () => {
@@ -40,17 +36,14 @@ export default function Page() {
         fetchBalance();
     }, [networkMode]);
 
-    // Handle network mode change
     const handleNetworkModeChange = useCallback((newNetworkMode: string) => {
         setNetworkMode(newNetworkMode);
     }, []);
 
-    // Handle max balance click
     const handleMaxClick = () => {
         setAmount(maxBalance.toString());
     };
 
-    // Validate Solana public key
     const validatePublicKey = (key: string): boolean => {
         try {
             new PublicKey(key);
@@ -60,14 +53,12 @@ export default function Page() {
         }
     };
 
-    // Handle recipient input change
     const handleRecipientChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
         setRecipient(value);
         setIsRecipientValid(validatePublicKey(value));
     };
 
-    // Handle amount input change
     const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
         if (!isNaN(Number(value)) && parseFloat(value) >= 0 && parseFloat(value) <= maxBalance) {
@@ -75,47 +66,39 @@ export default function Page() {
         }
     };
 
-    // Handle sending transfer
-    const sendTransfer = async () => {
-        if (!isRecipientValid || recipient === "" || !amount) {
-            toast.error("Please enter valid recipient and amount");
-            return;
-        }
-
+    const SendTokens = async () => {
+        setIsSending(true);
         try {
-            setIsSending(true);
-            const connection = new Connection(endpoint);
-            const fromPublicKey = new PublicKey(localStorage.getItem("PublicKey") || "");
-            const toPublicKey = new PublicKey(recipient);
-            const privateKeyString = localStorage.getItem("PrivateKey");
-            if (!privateKeyString) {
-                throw new Error("Private key not found in local storage");
+            // Retrieve the publicKey from localStorage
+            const storedPublicKey = localStorage.getItem("PublicKey");
+            console.log(storedPublicKey);
+
+
+            if (!storedPublicKey) {
+                throw new Error("Public key not found in local storage");
             }
-            const fromKeypair = Keypair.fromSecretKey(new Uint8Array(JSON.parse(privateKeyString)));
+
+            if (!validatePublicKey(storedPublicKey)) {
+                throw new Error("Invalid public key stored in local storage");
+            }
+
+            if (!wallet.publicKey) {
+                throw new Error("Wallet not connected");
+            }
 
             const transaction = new Transaction().add(
                 SystemProgram.transfer({
-                    fromPubkey: fromPublicKey,
-                    toPubkey: toPublicKey,
-                    lamports: Math.round(Number(amount) * 1e9), 
+                    fromPubkey: new PublicKey(storedPublicKey), // Use the stored public key
+                    toPubkey: new PublicKey(recipient),
+                    lamports: parseFloat(amount) * LAMPORTS_PER_SOL,
                 })
             );
 
-            const signature = await connection.sendTransaction(transaction, [fromKeypair]);
-            await connection.confirmTransaction(signature);
-
-            toast.success("Transaction Successful");
-
-            // Refresh balance
-            const newBalance = await GetBalance(fromPublicKey.toString());
-            setMaxBalance(newBalance / 1e9); 
-
-            // Clear input fields
-            setAmount("");
-            setRecipient("");
-        } catch (error) {
-            console.error("Transfer failed", error);
-            toast.error(`Transaction Failed: ${error instanceof Error ? error.message : String(error)}`);
+            await wallet.sendTransaction(transaction, connection);
+            toast.success("Sent Successfully");
+        } catch (e: any) {
+            console.log(e);
+            toast.error(e.message || "An error occurred");
         } finally {
             setIsSending(false);
         }
@@ -150,12 +133,13 @@ export default function Page() {
                                 Max
                             </Button>
                         </div>
+
                         <div className="text-sm text-gray-400">
                             Available Balance: {maxBalance} SOL
                         </div>
                         <Button
                             className="w-full sm:w-auto animate-fade-in-up bg-white text-black hover:bg-gray-300"
-                            onClick={sendTransfer}
+                            onClick={SendTokens}
                             disabled={!isRecipientValid || recipient === "" || !amount || isSending}
                         >
                             {isSending ? "Sending..." : "Send"}
