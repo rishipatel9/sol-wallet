@@ -5,9 +5,9 @@ import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNetworkMode } from "@/hooks/useNetwork";
-import { GetBalance } from "@/utils/GetBalance";
+import { GetBalance, GetSolanaPrice } from "@/utils/GetBalance";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
-import { ArrowRightLeft, Check, Copy, DollarSign, Plus, Send } from "lucide-react";
+import { ArrowRightLeft, Check, Copy, DollarSign, Plus, Send, ArrowUp, ArrowDown } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast, Toaster } from "sonner";
 import {
@@ -24,7 +24,9 @@ import QRCode from "react-qr-code";
 
 export default function Page() {
   const router = useRouter();
-  const [balance, setBalance] = useState<string | null>(null);  
+  const [balance, setBalance] = useState<string | null>(null);
+  const [dollarAmount, setDollarAmount] = useState<string | null>(null);
+  const [priceChange, setPriceChange] = useState<number | null>(null);
   const [publicKey, setPublicKey] = useState<string | null>(null);
   const [mnemonic, setMnemonic] = useState<string>("");
   const [networkMode, setNetworkMode] = useNetworkMode();
@@ -40,32 +42,41 @@ export default function Page() {
       setPublicKey(storedPublicKey);
       setMnemonic(storedMnemonic);
       if (networkMode) {
-        getBalance(storedPublicKey, networkMode);
+        getBalanceAndPrice(storedPublicKey, networkMode);
       }
     }
   }, [router, networkMode]);
 
-  const getBalance = useCallback(async (publicKey: string, networkMode: string) => {
+  const getBalanceAndPrice = useCallback(async (publicKey: string, networkMode: string) => {
     try {
-      const bal = await GetBalance(publicKey);
-      setBalance((bal / LAMPORTS_PER_SOL).toFixed(2));
+      const [bal, { price, priceChange24h }] = await Promise.all([
+        GetBalance(publicKey),
+        GetSolanaPrice()
+      ]);
+
+      const solBalance = (bal / LAMPORTS_PER_SOL).toFixed(2);
+      const usdAmount = (parseFloat(solBalance) * price).toFixed(2);
+
+      setBalance(solBalance);
+      setDollarAmount(usdAmount);
+      setPriceChange(priceChange24h);
     } catch (error) {
-      console.error("Error fetching balance:", error);
+      console.error("Error fetching balance or price:", error);
     }
   }, []);
 
   useEffect(() => {
     if (publicKey && networkMode) {
-      getBalance(publicKey, networkMode);
+      getBalanceAndPrice(publicKey, networkMode);
     }
-  }, [networkMode, publicKey, getBalance]);
+  }, [networkMode, publicKey, getBalanceAndPrice]);
 
   const handleNetworkModeChange = useCallback((newNetworkMode: string) => {
     setNetworkMode(newNetworkMode);
     if (publicKey) {
-      getBalance(publicKey, newNetworkMode);
+      getBalanceAndPrice(publicKey, newNetworkMode);
     }
-  }, [publicKey, setNetworkMode, getBalance]);
+  }, [publicKey, setNetworkMode, getBalanceAndPrice]);
 
   const handleCopy = useCallback(() => {
     if (publicKey && textAreaRef.current) {
@@ -88,8 +99,8 @@ export default function Page() {
     return <SkeletonPage />;
   }
 
-  const handleSend=()=>{
-	router.push('/transfer')
+  const handleSend = () => {
+    router.push('/transfer');
   }
 
   return (
@@ -107,17 +118,34 @@ export default function Page() {
                 </div>
               )}
             </div>
-            {balance !== null ? (
-              <div>
-                {parseInt(balance) * 148}$
-				<p className='text-sm'>{publicKey}</p>
+            {balance !== null && dollarAmount !== null ? (
+              <div className='flex justify-center items-center'>
+               <div>
+               ${dollarAmount}
+               </div>
+                <div className="flex justify-center items-center space-x-2 pl-2">
+                  {priceChange !== null && (
+                    priceChange >= 0 ? (
+                      <ArrowUp className="text-green-500" />
+                    ) : (
+                      <ArrowDown className="text-red-500" />
+                    )
+                  )}
+                  <span className="text-sm">
+                    {priceChange !== null ? (
+                      `${priceChange.toFixed(2)}%`
+                    ) : (
+                      <Skeleton className="w-8 h-4 bg-gray-600" />
+                    )}
+                  </span>
+                </div>
               </div>
-            ) :
+            ) : (
               <div className="flex justify-center items-center h-12">
                 <Skeleton className="md:w-10 w-10 h-full bg-gray-600" />
               </div>
-            }
-			
+            )}
+
             <Drawer>
               <DrawerTrigger>
                 <Button className="m-2 md:p-10 px-5 py-10 bg-[#18181B] border border-[#27272B] hover:bg-green-950">
@@ -133,9 +161,9 @@ export default function Page() {
                     <QRCode size={256} value={publicKey || ""} viewBox={`0 0 256 256`} className="border border-[#27272B] bg-white rounded-sm my-1  p-2" />
                   </DrawerTitle>
                   <DrawerDescription>
-                  <div className="my-3 text-center text-3xl font-bold tracking-tighter sm:text-2xl  md:text-3xl text-white">
-                    Your Solana Address
-                  </div>
+                    <div className="my-3 text-center text-3xl font-bold tracking-tighter sm:text-2xl  md:text-3xl text-white">
+                      Your Solana Address
+                    </div>
                     <div className="mx-auto max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl bg-[#18181B] p-4 rounded-lg shadow-md">
                       <div className="flex items-center justify-between space-x-2">
                         <div className="flex-1 truncate text-sm font-medium text-white">
@@ -164,48 +192,36 @@ export default function Page() {
                       readOnly
                     />
                   </DrawerDescription>
-                  <DrawerFooter className="text-center text-base font-bold sm:text-lg md:text-lg text-gray-600">
-                    This address can only be used to receive <br /> compatible tokens
+                  <DrawerFooter className="text-center text-base font-bold sm:text-lg md:text-xl text-white">
+                    Solana Wallet
                   </DrawerFooter>
                 </DrawerHeader>
-                <DrawerFooter>
-                  <DrawerClose >
-                    <Button variant="outline" className="w-full sm:w-auto ">Close</Button>
-                  </DrawerClose>
-                </DrawerFooter>
+                <DrawerClose />
               </DrawerContent>
             </Drawer>
 
-            <Button className="m-2 md:p-10 px-5 py-10 bg-[#18181B] border border-[#27272B] hover:bg-red-950" onClick={handleSend}>
+            <Button className="m-2 md:p-10 px-5 py-10 bg-[#18181B] border border-[#27272B] hover:bg-green-950" onClick={handleSend}>
               <div className="flex flex-col justify-center items-center">
-                <Send className="size-7" stroke="red"  />
-                Send
+                <Send className="size-7" stroke="green" />
+                <span>Send</span>
               </div>
             </Button>
-            <Button className="m-2 md:p-10 px-5 py-10 bg-[#18181B] border border-[#27272B] hover:bg-yellow-950" onClick={()=>toast.message("Comming Soon")}>
-              <div className="flex flex-col justify-center items-center">
-                <ArrowRightLeft className="size-7" stroke="yellow" />
-                Swap
-              </div>
-            </Button>
-            <Button className="m-2 md:p-10 px-5 py-10 bg-[#18181B] border border-[#27272B] hover:bg-blue-950" onClick={()=>toast.message("Comming Soon")}>
-              <div className="flex flex-col justify-center items-center">
-                <DollarSign className=" size-7" stroke="blue" />
-                Buy
-              </div>
-            </Button>
+            <Toaster richColors />
           </div>
         </div>
       </section>
-      <Toaster className='bg-black text-white ' />
     </main>
   );
 }
 
 function SkeletonPage() {
   return (
-    <main className="flex justify-center items-center h-screen bg-black font-mono">
-      <Skeleton className="w-32 h-12 bg-gray-600" />
-    </main>
+    <div className="flex justify-center items-center h-screen bg-black font-mono">
+      <div className="animate-pulse space-y-2">
+        <Skeleton className="w-32 h-12 bg-gray-600" />
+        <Skeleton className="w-48 h-12 bg-gray-600" />
+        <Skeleton className="w-24 h-12 bg-gray-600" />
+      </div>
+    </div>
   );
 }
