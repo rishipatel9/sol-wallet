@@ -11,8 +11,14 @@ import {
     ConnectionProvider,
     useConnection,
     useWallet,
-    WalletProvider
+    WalletProvider,
 } from '@solana/wallet-adapter-react';
+import { WalletModalProvider, WalletMultiButton } from '@solana/wallet-adapter-react-ui';
+import { PhantomWalletAdapter } from '@solana/wallet-adapter-wallets';
+import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
+const wallets = [new PhantomWalletAdapter()];
+
+const network = WalletAdapterNetwork.Devnet;
 
 export default function Page() {
     const [networkMode, setNetworkMode] = useState<string>("devnet");
@@ -67,28 +73,22 @@ export default function Page() {
     };
 
     const SendTokens = async () => {
+        if (!wallet.connected || !wallet.publicKey) {
+            toast.error("Please connect your wallet");
+            return;
+        }
+
         setIsSending(true);
         try {
-            // Retrieve the publicKey from localStorage
-            const storedPublicKey = localStorage.getItem("PublicKey");
-            console.log(storedPublicKey);
+            const publicKey = wallet.publicKey.toString();
 
-
-            if (!storedPublicKey) {
-                throw new Error("Public key not found in local storage");
-            }
-
-            if (!validatePublicKey(storedPublicKey)) {
-                throw new Error("Invalid public key stored in local storage");
-            }
-
-            if (!wallet.publicKey) {
-                throw new Error("Wallet not connected");
+            if (!validatePublicKey(publicKey)) {
+                throw new Error("Invalid wallet public key");
             }
 
             const transaction = new Transaction().add(
                 SystemProgram.transfer({
-                    fromPubkey: new PublicKey(storedPublicKey), // Use the stored public key
+                    fromPubkey: wallet.publicKey,
                     toPubkey: new PublicKey(recipient),
                     lamports: parseFloat(amount) * LAMPORTS_PER_SOL,
                 })
@@ -105,48 +105,54 @@ export default function Page() {
     };
 
     return (
-        <main className="flex justify-center items-center h-screen bg-black font-mono">
-            <Navbar onNetworkModeChange={handleNetworkModeChange} networkMode={networkMode} />
-            <section className="w-full py-12 md:py-24 lg:py-32">
-                <div className="md:px-6 px-4 text-white">
-                    <div className="bg-[#18181B] border border-[#27272B] shadow-lg rounded-md mx-auto max-w-2xl space-y-4 text-center animate-fade-in text-3xl font-bold sm:text-4xl md:text-5xl text-white p-4">
-                        <div>Send Solana</div>
-                        <Input
-                            type="text"
-                            className={`bg-black border shadow-lg border-[#27272B] text-white py-4 ${!isRecipientValid ? 'border-red-500' : 'border-green-500'}`}
-                            placeholder={`Recipient's Solana ${networkMode} Address`}
-                            value={recipient}
-                            onChange={handleRecipientChange}
-                        />
-                        {!isRecipientValid && recipient && (
-                            <p className="text-red-500 text-sm">Invalid Solana address</p>
-                        )}
-                        <div className="flex bg-black border shadow-lg border-[#27272B] text-white">
-                            <Input
-                                type="text"
-                                className="bg-black border shadow-lg border-[#27272B] text-white pr-16 py-4"
-                                placeholder="Amount"
-                                value={amount}
-                                onChange={handleAmountChange}
-                            />
-                            <Button onClick={handleMaxClick} className="bg-white text-black hover:bg-gray-300">
-                                Max
-                            </Button>
-                        </div>
+        <ConnectionProvider endpoint={'https://api.devnet.solana.com'}>
+            <WalletProvider wallets={wallets} autoConnect>
+                <WalletModalProvider>
+                    <main className="flex justify-center items-center h-screen bg-black font-mono">
+                        <Navbar onNetworkModeChange={handleNetworkModeChange} networkMode={networkMode} />
+                        <section className="w-full py-12 md:py-24 lg:py-32">
+                            <div className="md:px-6 px-4 text-white">
+                                <div className="bg-[#18181B] border border-[#27272B] shadow-lg rounded-md mx-auto max-w-2xl space-y-4 text-center animate-fade-in text-3xl font-bold sm:text-4xl md:text-5xl text-white p-4">
+                                    <div>Send Solana</div>
+                                    <Input
+                                        type="text"
+                                        className={`bg-black border shadow-lg border-[#27272B] text-white py-4 ${!isRecipientValid ? 'border-red-500' : 'border-green-500'}`}
+                                        placeholder={`Recipient's Solana ${networkMode} Address`}
+                                        value={recipient}
+                                        onChange={handleRecipientChange}
+                                    />
+                                    {!isRecipientValid && recipient && (
+                                        <p className="text-red-500 text-sm">Invalid Solana address</p>
+                                    )}
+                                    <div className="flex bg-black border shadow-lg border-[#27272B] text-white">
+                                        <Input
+                                            type="text"
+                                            className="bg-black border shadow-lg border-[#27272B] text-white pr-16 py-4"
+                                            placeholder="Amount"
+                                            value={amount}
+                                            onChange={handleAmountChange}
+                                        />
+                                        <Button onClick={handleMaxClick} className="bg-white text-black hover:bg-gray-300">
+                                            Max
+                                        </Button>
+                                    </div>
 
-                        <div className="text-sm text-gray-400">
-                            Available Balance: {maxBalance} SOL
-                        </div>
-                        <Button
-                            className="w-full sm:w-auto animate-fade-in-up bg-white text-black hover:bg-gray-300"
-                            onClick={SendTokens}
-                            disabled={!isRecipientValid || recipient === "" || !amount || isSending}
-                        >
-                            {isSending ? "Sending..." : "Send"}
-                        </Button>
-                    </div>
-                </div>
-            </section>
-        </main>
+                                    <div className="text-sm text-gray-400">
+                                        Available Balance: {maxBalance} SOL
+                                    </div>
+                                    <Button
+                                        className="w-full sm:w-auto animate-fade-in-up bg-white text-black hover:bg-gray-300"
+                                        onClick={SendTokens}
+                                        disabled={!isRecipientValid || recipient === "" || !amount || isSending}
+                                    >
+                                        {isSending ? "Sending..." : "Send"}
+                                    </Button>
+                                </div>
+                            </div>
+                        </section>
+                    </main>
+                </WalletModalProvider>
+            </WalletProvider>
+        </ConnectionProvider >
     );
 }
