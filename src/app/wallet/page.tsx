@@ -49,13 +49,16 @@ export default function Page() {
 
   const getBalanceAndPrice = useCallback(async (publicKey: string, networkMode: string) => {
     try {
-      const [bal, { price, priceChange24h }] = await Promise.all([
+      const [balance, { price, priceChange24h }] = await Promise.all([
         GetBalance(publicKey),
         GetSolanaPrice()
       ]);
-
-      const solBalance = (bal / LAMPORTS_PER_SOL).toFixed(2);
+      console.log(balance);
+      
+      
+      const solBalance = (balance / LAMPORTS_PER_SOL).toFixed(2);
       const usdAmount = (parseFloat(solBalance) * price).toFixed(2);
+      console.log(solBalance);
 
       setBalance(solBalance);
       setDollarAmount(usdAmount);

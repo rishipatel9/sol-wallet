@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Switch } from "./ui/switch";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuTrigger } from "./ui/dropdown-menu";
-import { EyeOff, GithubIcon, HomeIcon, Plus, Settings, Trash2, TwitterIcon, User } from "lucide-react";
+import { AlignJustify, EyeOff, GithubIcon, HomeIcon, Plus, Settings, Trash2, TwitterIcon, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
     AlertDialog,
@@ -63,7 +63,7 @@ export default function Navbar({ networkMode, onNetworkModeChange }: NavbarProps
                     <div className="flex items-center space-x-2">
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Settings className="cursor-pointer">Open</Settings>
+                                <AlignJustify  className="cursor-pointer">Open</AlignJustify>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent className="w-56 mt-4 bg-transparent backdrop-blur-md text-white border-[#27272B]">
                                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
