@@ -52,14 +52,9 @@ export default function Page() {
       const [balance, { price, priceChange24h }] = await Promise.all([
         GetBalance(publicKey),
         GetSolanaPrice()
-      ]);
-      console.log(balance);
-      
-      
+      ]);      
       const solBalance = (balance / LAMPORTS_PER_SOL).toFixed(2);
       const usdAmount = (parseFloat(solBalance) * price).toFixed(2);
-      console.log(solBalance);
-
       setBalance(solBalance);
       setDollarAmount(usdAmount);
       setPriceChange(priceChange24h);
@@ -134,7 +129,7 @@ export default function Page() {
                       <ArrowDown className="text-red-500" />
                     )
                   )}
-                  <span className="text-sm">
+                  <span className={`text-sm ${priceChange!=null && priceChange >= 0 ? "bg-[#22392B] text-green-500" : "bg-[#392827] text-red-500" }  px-4 py-2 rounded-md `}>
                     {priceChange !== null ? (
                       `${priceChange.toFixed(2)}%`
                     ) : (

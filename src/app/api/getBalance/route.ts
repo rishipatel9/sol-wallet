@@ -4,8 +4,6 @@ import axios from 'axios';
 export async function POST(req: NextRequest) {
   try {
     const { publicKey ,network} = await req.json(); 
-    console.log(publicKey);
-    console.log(network);
     const body = {
       id: '1',
       jsonrpc: '2.0',
@@ -17,7 +15,6 @@ export async function POST(req: NextRequest) {
       `https://solana-${network}.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_API_KEY}`,
       body
     );
-    console.log(data.result.value);
     return NextResponse.json({"balance":data.result.value});
   } catch (e: any) {
     console.error('Error:', e.message);

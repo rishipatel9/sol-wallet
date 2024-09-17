@@ -7,7 +7,6 @@ export const GetBalance = async (publicKey: string): Promise<number> => {
     const res=await axios.post("/api/getBalance",{
       publicKey,network
     })
-    console.log(res);
     return res.data.balance;
   } catch (e) {
     toast.error("Unable to Fetch Balance");

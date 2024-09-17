@@ -8,6 +8,7 @@ import { GetBalance } from "@/utils/GetBalance";
 import { PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL, Keypair, Connection } from "@solana/web3.js";
 import { toast } from "sonner";
 import bs58  from "bs58";
+import { useRouter } from 'next/navigation';
 
 const connection = new Connection(`https://solana-devnet.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_API_KEY}`);
 
@@ -18,8 +19,12 @@ export default function Page() {
     const [recipient, setRecipient] = useState<string>("");
     const [isRecipientValid, setIsRecipientValid] = useState<boolean>(true);
     const [isSending, setIsSending] = useState<boolean>(false);
+    const router=useRouter();
     
     useEffect(() => {
+        const storedPublicKey = localStorage.getItem("PublicKey");
+        const storedMnemonic = localStorage.getItem("mnemonic");
+        if (!storedPublicKey || !storedMnemonic) router.push('/');
         const fetchBalance = async () => {
             const publicKey = localStorage.getItem("PublicKey");
             if (publicKey) {
